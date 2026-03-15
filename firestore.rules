@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName']) &&
+             data.uid is string &&
+             data.displayName is string && data.displayName.size() < 50 &&
+             (!('totalCoins' in data) || data.totalCoins is int) &&
+             (!('robux' in data) || data.robux is int) &&
+             (!('inventory' in data) || data.inventory is list) &&
+             (!('avatar' in data) || (
+               data.avatar is map &&
+               data.avatar.keys().hasAll(['skinColor', 'shirtColor', 'pantsColor', 'hatType']) &&
+               data.avatar.skinColor is string &&
+               data.avatar.shirtColor is string &&
+               data.avatar.pantsColor is string &&
+               data.avatar.hatType in ['none', 'cap', 'crown', 'headphones'] &&
+               (!('isHeadless' in data.avatar) || data.avatar.isHeadless is bool) &&
+               (!('isKorblox' in data.avatar) || data.avatar.isKorblox is bool)
+             ));
+    }
+
+    function isValidScore(data) {
+      return data.keys().hasAll(['userId', 'gameId', 'score']) &&
+             data.userId == request.auth.uid &&
+             data.gameId is string &&
+             data.score is int;
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    // Games Metadata (Read-only for users)
+    match /games/{gameId} {
+      allow read: if true;
+      allow write: if false; // Only admins via console
+    }
+
+    // Scores
+    match /scores/{scoreId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidScore(request.resource.data);
+      allow update: if isAuthenticated() && isValidScore(request.resource.data) && 
+                      request.resource.data.userId == resource.data.userId;
+    }
+  }
+}

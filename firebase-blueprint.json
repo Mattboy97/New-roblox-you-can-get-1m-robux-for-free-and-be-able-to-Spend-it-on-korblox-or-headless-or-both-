@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "totalCoins": { "type": "integer" },
+        "robux": { "type": "integer" },
+        "inventory": { "type": "array", "items": { "type": "string" } },
+        "avatar": {
+          "type": "object",
+          "properties": {
+            "skinColor": { "type": "string" },
+            "shirtColor": { "type": "string" },
+            "pantsColor": { "type": "string" },
+            "hatType": { "type": "string", "enum": ["none", "cap", "crown", "headphones"] },
+            "isHeadless": { "type": "boolean" },
+            "isKorblox": { "type": "boolean" }
+          }
+        }
+      },
+      "required": ["uid", "displayName"]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "Information about a mini-game",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "genre": { "type": "string" }
+      },
+      "required": ["id", "title"]
+    },
+    "Score": {
+      "title": "Score",
+      "description": "User high scores for games",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gameId": { "type": "string" },
+        "score": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "gameId", "score"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/games/{gameId}": {
+      "schema": "Game",
+      "description": "Game metadata"
+    },
+    "/scores/{scoreId}": {
+      "schema": "Score",
+      "description": "Global high scores"
+    }
+  }
+}
